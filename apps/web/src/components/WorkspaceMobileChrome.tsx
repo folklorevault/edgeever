@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Boxes, ChevronDown, ChevronRight, FileText, Home, Network, Plus, Search, TableProperties, UserRound, Workflow, X } from "lucide-react";
+import { Boxes, ChevronDown, ChevronRight, FileText, Home, Network, Plus, Presentation, Search, TableProperties, UserRound, Workflow, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -34,14 +34,17 @@ const MobileBottomNavButton = ({
 }) => (
   <button
     className={cn(
-      "flex h-mobile-touch flex-col items-center justify-center gap-0.5 rounded-md text-xs font-medium transition-all duration-200",
-      active ? "text-slate-950" : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+      "relative mx-auto flex h-12 w-20 flex-col items-center justify-center gap-0.5 rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-green)]",
+      active
+        ? "font-bold text-slate-950 [&_svg]:text-emerald-700"
+        : "text-slate-500 hover:bg-slate-100 hover:text-slate-950"
     )}
     type="button"
     aria-current={active ? "page" : undefined}
     aria-label={label}
     onClick={onClick}
   >
+    {active ? <span aria-hidden="true" className="absolute top-0 h-0.5 w-5 rounded-full bg-emerald-700" /> : null}
     {icon}
     <span>{label}</span>
   </button>
@@ -85,26 +88,30 @@ export const MobileBottomNav = ({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="center" side="top" sideOffset={8} className="w-52">
-            <DropdownMenuItem className="gap-2" onSelect={() => onCreateMemo()}>
+            <DropdownMenuItem className="gap-2 text-xs leading-5" onSelect={() => onCreateMemo()}>
               <FileText className="h-4 w-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{t("diagram.normalNote")}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2" onSelect={() => onCreateMemo("mind-map")}>
+            <DropdownMenuItem className="gap-2 text-xs leading-5" onSelect={() => onCreateMemo("mind-map")}>
               <Network className="h-4 w-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{t("diagram.mindMap")}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2" onSelect={() => onCreateMemo("flowchart")}>
+            <DropdownMenuItem className="gap-2 text-xs leading-5" onSelect={() => onCreateMemo("flowchart")}>
               <Workflow className="h-4 w-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{t("diagram.flowchart")}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2" onSelect={() => onCreateMemo("architecture")}>
+            <DropdownMenuItem className="gap-2 text-xs leading-5" onSelect={() => onCreateMemo("architecture")}>
               <Boxes className="h-4 w-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{t("diagram.architecture")}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2" onSelect={() => onCreateMemo("table")}>
+            <DropdownMenuItem className="gap-2 text-xs leading-5" onSelect={() => onCreateMemo("infographic")}>
+              <Presentation className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">{t("infographic.name")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2 text-xs leading-5" onSelect={() => onCreateMemo("table")}>
               <TableProperties className="h-4 w-4 shrink-0" />
               <span className="min-w-0 flex-1 truncate">{t("structuredTable.name")}</span>
-              <span className="inline-flex shrink-0 items-center rounded-full border border-emerald-200/80 bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold leading-none tracking-wide text-emerald-700">
+              <span className="inline-flex shrink-0 items-center rounded-full border border-emerald-200/80 bg-emerald-50 px-1.5 text-xs font-normal leading-5 text-emerald-700">
                 Beta
               </span>
             </DropdownMenuItem>

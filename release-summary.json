@@ -1,32 +1,26 @@
 {
-  "version": "1.85.0",
+  "version": "1.87.0",
   "changes": {
     "en-US": [
-      "The interface can use its own device-local font, separate from the note font. Notes and public shares can also use Zhuque Fangsong or LXGW Neo ZhiSong.",
-      "In a structured table, click an image thumbnail to open it. Copy and download appear on hover, and copy places the image itself on the clipboard.",
-      "Plugin settings are saved on this device as soon as they change. Turning a scheduled digest on and setting its time no longer drops one of the two updates.",
-      "WeChat chat import keeps the archive until the note is saved, recovers compressed images, uses small images by default, and adds a time to generic chat titles.",
-      "Images staged for a note stay available while a draft still references them, and desktop links to those staged files keep working.",
-      "The login screen leaves the username blank except on the public demo.",
-      "Sidebar shortcuts use a tag icon for tags and a paperclip for attachments."
+      "Add beta infographic notes, created and edited on Web and desktop. Describe the content for AI to generate one, or start from a template, then keep revising it in the same conversation. Content edits keep the existing layout, and the editor follows dark mode. On mobile, edit them on Web or desktop.",
+      "Plugin AI calls no longer have an EdgeEver output-token ceiling. When a limit is omitted, the request still defaults to 3000 tokens. The model or provider may apply its own limit.",
+      "The workspace uses a cooler gray palette. Note titles line up with the toolbar and use the width beside the status controls. Menus, settings, and secondary pages use 14px and 12px type. Dividers and completed tasks use ink, tooltips use a light card, and the duplicate reading-mode icon is removed.",
+      "Desktop WeChat chat import no longer adds an extra summary card. Sandboxed share paths resolve correctly, and a link the system rejects is no longer reported as a failed import.",
+      "Notebooks that were missing an internal identifier can now be deleted. The inbox still cannot be deleted."
     ],
     "zh-CN": [
-      "界面可以单独使用本机字体，不影响笔记正文。笔记和公开分享还可以使用朱雀仿宋或霞鹜新致宋。",
-      "多维表格中点击图片缩略图即可打开。复制和下载在悬停时出现，复制会把图片本身放到剪贴板。",
-      "插件设置在本机一改即存。开启定时摘要并设置时间时，不会再丢掉其中一次更新。",
-      "微信聊天记录导入会把压缩包保留到笔记保存完成，并恢复被压缩的图片。导入图片默认使用小图，没有具体标题的聊天会带上时间。",
-      "草稿仍引用暂存图片时，这些图片会保留。桌面端指向这些暂存文件的链接也会继续可用。",
-      "除公开 Demo 外，登录页的用户名默认为空。",
-      "侧栏快捷入口中，标签使用标签图标，附件使用回形针图标。"
+      "新增 Beta 信息图笔记，可在 Web 和桌面端创建与编辑。用一句话描述即可让 AI 生成，也可以从模板开始，然后在同一段对话里继续修改。改内容时会尽量保持原来的版式，编辑区跟随深色模式。手机端请在 Web 或桌面端修改。",
+      "插件调用 AI 时，EdgeEver 不再设置输出长度上限。未指定时仍默认 3000 token。模型或服务商可以有自己的上限。",
+      "工作区改为更冷静的灰白界面。笔记标题与工具栏左对齐，并占用状态控件左侧的宽度。菜单、设置和次级页面统一为 14px 与 12px。分割线和已完成任务改为墨色，提示改为浅色卡片，并去掉重复的阅读模式图标。",
+      "桌面端导入微信聊天记录时不再多出一张摘要卡。沙盒中的分享路径可以正确解析，被系统拒绝的链接也不会再被当成导入失败。",
+      "缺少内部标识的笔记本现在可以删除。收件箱仍然不能删除。"
     ],
     "ja": [
-      "画面のフォントをこの端末だけで選べ、ノート本文とは別になります。ノートと公開共有では朱雀仿宋と霞鹜新致宋も使えます。",
-      "多次元テーブルでは画像のサムネイルをクリックすると開きます。コピーとダウンロードはホバー時に表示され、コピーは画像そのものをクリップボードに置きます。",
-      "プラグイン設定はこの端末で変更した直後に保存されます。定期ダイジェストをオンにして時刻を設定しても、どちらかの更新が失われません。",
-      "WeChat のチャット取り込みはノートの保存まで書庫を残し、圧縮された画像を復元します。画像は既定で小さく、具体的な題のないチャット名には時刻が付きます。",
-      "下書きが参照している一時画像は残ります。デスクトップ上のその一時ファイルへのリンクも引き続き使えます。",
-      "公開デモ以外では、ログイン画面のユーザー名は空のままです。",
-      "サイドバーのショートカットは、タグにタグのアイコン、添付ファイルにクリップのアイコンを使います。"
+      "Web とデスクトップで作成・編集できるベータ版のインフォグラフィックノートを追加しました。内容を説明して AI に生成させるか、テンプレートから始め、同じ会話で修正を続けられます。内容の修正では既存のレイアウトを保ち、編集画面はダークモードに従います。モバイルでは Web またはデスクトップで編集してください。",
+      "プラグインの AI 呼び出しに、EdgeEver 独自の出力トークン上限はなくなりました。指定しない場合は従来どおり 3000 トークンが既定です。モデルやプロバイダが独自の上限を設けることがあります。",
+      "ワークスペースを落ち着いたグレーにしました。ノートのタイトルはツールバーと左端を揃え、状態表示の左側まで幅を使います。メニュー、設定、二次ページは 14px と 12px に統一します。区切り線と完了したタスクは墨色、ツールチップは明るいカードになり、重複していた閲覧モードのアイコンはなくなります。",
+      "デスクトップの WeChat チャット取り込みは、余分な要約カードを出さなくなりました。サンドボックス内の共有パスを正しく解決し、システムに拒否されたリンクを取り込み失敗として表示しません。",
+      "内部識別子のないノートブックも削除できるようになりました。受信箱は引き続き削除できません。"
     ]
   }
 }

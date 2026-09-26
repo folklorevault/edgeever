@@ -46,7 +46,7 @@ import {
 } from "@/lib/mobile-editor";
 import { cn } from "@/lib/utils";
 import { isBrowserOffline, isBrowserOnline } from "@/lib/network-status";
-import { createDefaultDiagramDocument, createDefaultTableDocument, diagramFallbackMarkdown, getNotebookDescendantIds, hasTableDocumentMarker, markdownToDoc, parseDiagramDocument, parseTableDocument, serializeDiagramDocument, serializeTableDocument, tableFallbackMarkdown, type NoteCreateKind, type Notebook, type AuthUser, type MemoSummary, type MemoDetail, type MemoTemplate as SavedMemoTemplate } from "@edgeever/shared";
+import { createDefaultDiagramDocument, createDefaultInfographicDocument, createDefaultTableDocument, diagramFallbackMarkdown, getNotebookDescendantIds, hasTableDocumentMarker, infographicFallbackMarkdown, markdownToDoc, parseDiagramDocument, parseInfographicDocument, parseTableDocument, serializeDiagramDocument, serializeInfographicDocument, serializeTableDocument, tableFallbackMarkdown, type NoteCreateKind, type Notebook, type AuthUser, type MemoSummary, type MemoDetail, type MemoTemplate as SavedMemoTemplate } from "@edgeever/shared";
 import { toggleMobileMemoSelection } from "@edgeever/shared/mobile-ui";
 import type {
   Pane,
@@ -140,6 +140,7 @@ import { findMatchingMemoResource } from "@/lib/staged-resource-repair";
 const EditorPane = lazy(() => import("./EditorPane").then((module) => ({ default: module.EditorPane })));
 const DiagramEditorPane = lazy(() => import("./DiagramEditorPane"));
 const TableEditorPane = lazy(() => import("./TableEditorPane"));
+const InfographicEditorPane = lazy(() => import("./InfographicEditorPane"));
 const AssetsPane = lazy(() => import("./AssetsPane").then((module) => ({ default: module.AssetsPane })));
 const SettingsPane = lazy(() => import("./SettingsPane").then((module) => ({ default: module.SettingsPane })));
 const PluginMarketplacePane = lazy(() => import("./PluginMarketplacePane").then((module) => ({ default: module.PluginMarketplacePane })));
@@ -1233,7 +1234,7 @@ export const WorkspaceApp = ({
 
   const revealCreatedMemo = (memo: MemoDetail) => {
     const targetNotebookId = memo.notebookId;
-    const isStructuredNote = Boolean(parseDiagramDocument(memo.contentMarkdown) || parseTableDocument(memo.contentMarkdown));
+    const isStructuredNote = Boolean(parseDiagramDocument(memo.contentMarkdown) || parseTableDocument(memo.contentMarkdown) || parseInfographicDocument(memo.contentMarkdown));
 
     setMemoView("notebook");
     setSearch("");
@@ -1622,6 +1623,7 @@ export const WorkspaceApp = ({
   const selectedMemo = memoQuery.data?.memo ?? cachedSelectedMemo;
   const selectedDiagram = parseDiagramDocument(selectedMemo?.contentMarkdown);
   const selectedTableNote = hasTableDocumentMarker(selectedMemo?.contentMarkdown);
+  const selectedInfographicNote = Boolean(parseInfographicDocument(selectedMemo?.contentMarkdown));
   const desktopNotebookSidebarCollapsed = Boolean(isDesktop && notebookSidebarCollapsed);
   const desktopFocusModeActive = Boolean(
     isDesktop && desktopFocusMode && rightView === "editor" && selectedMemo && !memoSelectionModeActive
@@ -1716,7 +1718,11 @@ export const WorkspaceApp = ({
     setTemplatesOpen(false);
     setMobileBottomNavActive("home");
     creatingMemoSelectionRef.current = true;
+    let resumeDesktopSync: (() => void) | null = null;
     try {
+      if (isDesktopResourceRuntime()) {
+        resumeDesktopSync = await (await import("@/lib/desktop-sync")).pauseDesktopSyncForImport();
+      }
       const preparedFile = imageCompressionEnabled ? (await compressImageForUpload(file)).file : file;
       const memo = await createScreenshotMemo({
         notebookId,
@@ -1750,7 +1756,9 @@ export const WorkspaceApp = ({
           contentMarkdown: content.contentMarkdown,
           tags: created.tags,
         }),
-        deleteMemo: (memoId) => repository.deleteMemo(memoId, true),
+        deleteMemo: (memoId) => isDesktopResourceRuntime()
+          ? import("@/lib/desktop-repository").then(({ cancelPendingDesktopImportMemo }) => cancelPendingDesktopImportMemo(memoId))
+          : repository.deleteMemo(memoId, true),
       });
       await putLocalMemo(localDataScope, memo);
       revealCreatedMemo(memo);
@@ -1762,6 +1770,8 @@ export const WorkspaceApp = ({
         title: t("memoList.importScreenshotFailedTitle"),
         description: t("memoList.importScreenshotFailed"),
       });
+    } finally {
+      resumeDesktopSync?.();
     }
   }, [defaultMemoNotebookId, imageCompressionEnabled, localDataScope, memoView, notebooks, repository, selectedNotebookId, t]);
 
@@ -1809,7 +1819,11 @@ export const WorkspaceApp = ({
     creatingMemoSelectionRef.current = true;
     setWeChatImportsInProgress((count) => count + 1);
     let savedMemo: MemoDetail | null = null;
+    let resumeDesktopSync: (() => void) | null = null;
     try {
+      if (isDesktopResourceRuntime()) {
+        resumeDesktopSync = await (await import("@/lib/desktop-sync")).pauseDesktopSyncForImport();
+      }
       const memo = await createWeChatChatMemo({
         notebookId,
         title: payload.title?.trim() || "",
@@ -1854,7 +1868,9 @@ export const WorkspaceApp = ({
           contentMarkdown: content.contentMarkdown,
           tags: created.tags,
         }),
-        deleteMemo: (memoId) => repository.deleteMemo(memoId, true),
+        deleteMemo: (memoId) => isDesktopResourceRuntime()
+          ? import("@/lib/desktop-repository").then(({ cancelPendingDesktopImportMemo }) => cancelPendingDesktopImportMemo(memoId))
+          : repository.deleteMemo(memoId, true),
       });
       savedMemo = memo;
       await bridge?.finishWeChatImport?.(importId, true).catch(() => undefined);
@@ -1867,6 +1883,7 @@ export const WorkspaceApp = ({
       }
       creatingMemoSelectionRef.current = false;
     } finally {
+      resumeDesktopSync?.();
       setWeChatImportsInProgress((count) => Math.max(0, count - 1));
     }
   }, [defaultMemoNotebookId, imageCompressionEnabled, localDataScope, memoView, notebooks, repository, selectedNotebookId, t]);
@@ -1896,6 +1913,17 @@ export const WorkspaceApp = ({
     setTemplatesOpen(false);
     setMobileBottomNavActive("home");
     creatingMemoSelectionRef.current = true;
+    if (kind === "infographic") {
+      const infographic = createDefaultInfographicDocument();
+      createMemoMutation.mutate({
+        notebookId: targetNotebookId,
+        title: t("infographic.name"),
+        contentJson: markdownToDoc(infographicFallbackMarkdown(infographic)),
+        contentMarkdown: serializeInfographicDocument(infographic),
+        tags: [],
+      });
+      return;
+    }
     if (kind === "table") {
       const table = createDefaultTableDocument({
         name: t("structuredTable.defaultFields.name"),
@@ -3002,6 +3030,8 @@ export const WorkspaceApp = ({
       : isStandaloneRuntime
         ? t("workspace.pullToRefresh.pullNotes")
         : t("workspace.pullToRefresh.pullPage");
+  const showMobileSettingsNav = visibleActivePane === "editor" && rightView === "settings";
+
   return (
     <WorkspaceMotionProvider>
       <div className="edgeever-workspace-shell flex h-[100dvh] overflow-hidden text-slate-950">
@@ -3260,7 +3290,7 @@ export const WorkspaceApp = ({
             />
           </section>
 
-          <section className={cn("edgeever-workspace-editor min-h-0 min-w-0 lg:block", visibleActivePane === "editor" ? "block" : "hidden")}>
+          <section className={cn("edgeever-workspace-editor min-h-0 min-w-0 lg:block", visibleActivePane === "editor" ? "block" : "hidden", showMobileSettingsNav && "pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0")}>
             {shouldRenderRightPane && (
               <Suspense fallback={<PaneLoadingFallback label={rightPaneLoadingLabel} />}>
                 <m.div key={rightView} className="h-full min-h-0 min-w-0" {...paneEnterMotion}>
@@ -3362,6 +3392,26 @@ export const WorkspaceApp = ({
                           onToggleDesktopFocusMode={toggleDesktopFocusMode}
                           onOpenExecutionCenter={handleOpenExecutionCenter}
                           
+                        />
+                      ) : selectedMemo && selectedInfographicNote ? (
+                        <InfographicEditorPane
+                          key={selectedMemo.id}
+                          memo={selectedMemo}
+                          repository={repository}
+                          readOnly={memoView === "trash" || selectedMemo.isDeleted}
+                          onBackToList={() => {
+                            clearPendingCreatedMemo();
+                            setActivePane("memos");
+                          }}
+                          onSaved={async (memo) => {
+                            await putLocalMemo(localDataScope, memo);
+                            cacheMemoDetail(queryClient, memo, memoView);
+                            updateMemoSummaryInLists(queryClient, memoToSummary(memo));
+                            await Promise.all([
+                              queryClient.invalidateQueries({ queryKey: ["memos"], refetchType: "inactive" }),
+                              queryClient.invalidateQueries({ queryKey: ["notebooks"], refetchType: "inactive" }),
+                            ]);
+                          }}
                         />
                       ) : selectedMemo && selectedTableNote ? (
                         <TableEditorPane
@@ -3611,7 +3661,7 @@ export const WorkspaceApp = ({
         options={requestedPluginPanel?.options}
         onClose={() => setRequestedPluginPanel(null)}
       />
-      {visibleActivePane !== "editor" && !memoSelectionModeActive && (
+      {(visibleActivePane !== "editor" || showMobileSettingsNav) && !memoSelectionModeActive && (
         <MobileBottomNav
           activeItem={mobileBottomNavActive}
           canCreateMemo={canCreateMemo && memoView !== "trash"}
